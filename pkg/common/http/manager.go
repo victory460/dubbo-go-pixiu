@@ -19,6 +19,7 @@ package http
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	stdHttp "net/http"
@@ -141,13 +142,17 @@ func (hcm *HttpConnectionManager) buildTargetResponse(c *pch.HttpContext) {
 		c.TargetResp = &client.Response{Data: body}
 	case []byte:
 		c.StatusCode(stdHttp.StatusOK)
-		c.AddHeader(constant.HeaderKeyContextType, constant.HeaderValueTextPlain)
+		if json.Valid(res) {
+			c.AddHeader(constant.HeaderKeyContentType, constant.HeaderValueApplicationJson)
+		} else {
+			c.AddHeader(constant.HeaderKeyContentType, constant.HeaderValueTextPlain)
+		}
 		c.TargetResp = &client.Response{Data: res}
 	default:
 		//dubbo go generic invoke
 		response := util.NewDubboResponse(res, false)
 		c.StatusCode(stdHttp.StatusOK)
-		c.AddHeader(constant.HeaderKeyContextType, constant.HeaderValueJsonUtf8)
+		c.AddHeader(constant.HeaderKeyContentType, constant.HeaderValueJsonUtf8)
 		c.TargetResp = response
 	}
 }
